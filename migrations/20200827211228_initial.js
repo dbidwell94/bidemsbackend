@@ -1,3 +1,5 @@
+const projectModel = require('../src/models/projects');
+
 exports.up = function (knex) {
   return knex.schema
     .createTable("users", (table) => {
@@ -65,6 +67,10 @@ exports.up = function (knex) {
     })
     .createTable("projects_to_users", (table) => {
       table.increments();
+      table
+        .enu("access_level", projectModel.userAccessEnums)
+        .notNullable()
+        .defaultTo(projectModel.userAccessEnums[0]);
       table.integer("project_id").references("id").inTable("projects");
       table.integer("user_id").references("id").inTable("users");
     });

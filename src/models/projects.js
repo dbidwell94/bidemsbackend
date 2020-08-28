@@ -1,5 +1,7 @@
 const knex = require("../knex");
 
+const userAccessEnums = ["User", "Admin", "Moderator"];
+
 const projectWithUsernameSelector = [
   "projects.id",
   "projects.due_date",
@@ -11,15 +13,6 @@ const projectWithUsernameSelector = [
   "users.username as created_username",
 ];
 
-/**
- * --------------------------------
- * ALL GET REQUESTS
- * --------------------------------
- */
-
-/**
- * @returns a promise with either an error or an array of projects
- */
 async function getAllProjects() {
   const projects = await knex
     .select(projectWithUsernameSelector)
@@ -33,24 +26,19 @@ async function getAllProjects() {
 }
 
 async function getProjectById(id) {
-  const projects = await knex
+  console.log(id);
+  const project = await knex
     .select(projectWithUsernameSelector)
     .from("projects")
-    .where({ id });
-  if (projects.length < 1) {
-    throw new Error("No project with that id");
-  } else return projects[0];
+    .where({ "projects.id": id })
+    .innerJoin("users", "users.id", "=", "projects.created_user_id")
+    .first();
+  if (!project) {
+    throw new Error("That project does not exist");
+  } else {
+    return project;
+  }
 }
-
-/**
- * -------------------------------
- * ALL POST REQUESTS
- * -------------------------------
- */
-
-/**
- *
- */
 
 async function createNewProject({
   name,
@@ -74,8 +62,42 @@ async function createNewProject({
   }
 }
 
+async function addUserToProject({ projectId, creatorId, idToAdd, permission }) {
+  const project = await knex
+    .select("*")
+    .from("projects")
+    .where({ "projects.id": projectId })
+    .first();
+
+  const user = await knex
+    .select("*")
+    .from("users")
+    .where({ id: idToAdd })
+    .first();
+
+  if (!project) {
+    throw new Error("That project was not found");
+  } else if (!user) {
+    throw new Error("That user does not exist");
+  } else {
+    if (project.created_user_id !== creatorId) {
+      throw new Error("Only the project creator can add new users");
+    } else {
+      await knex
+        .insert({
+          access_level: permission,
+          project_id: projectId,
+          user_id: idToAdd,
+        })
+        .into("projects_to_users");
+    }
+  }
+}
+
 module.exports = {
   getAllProjects,
   getProjectById,
   createNewProject,
+  addUserToProject,
+  userAccessEnums,
 };

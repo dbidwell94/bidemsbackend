@@ -1,8 +1,13 @@
 const express = require("express");
-const crypt = require("bcrypt");
 const tokenHandler = require("jsonwebtoken");
 const router = express.Router();
-const authModel = require("../models/index");
+const authModel = require("../models/auth");
+
+/**
+ * ---------------------------------------------
+ * ALL POST REQUESTS
+ * ---------------------------------------------
+ */
 
 router.post("/register", (req, res) => {
   const { username, password, first_name, last_name, email } = req.body;
@@ -15,8 +20,11 @@ router.post("/register", (req, res) => {
     authModel
       .addNewUser({ username, password, first_name, last_name, email })
       .then((result) => {
-        console.log(result);
-        res.status(201).json(result);
+        const { password, created_at, updated_at, ...toReturn } = result;
+        const token = tokenHandler.sign(toReturn, process.env.SECRET, {
+          expiresIn: "1 day",
+        });
+        res.status(201).json({user: toReturn, token});
       })
       .catch((error) => {
         res.status(401).json({ message: error.message });
@@ -43,5 +51,11 @@ router.post("/login", (req, res) => {
       });
   }
 });
+
+/**
+ * ---------------------------------------------
+ * ALL DELETE REQUESTS
+ * ---------------------------------------------
+ */
 
 module.exports = router;

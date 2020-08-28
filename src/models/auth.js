@@ -14,10 +14,11 @@ async function addNewUser({
     );
   } else {
     const hash = crypt.hashSync(password, 10);
-    const userObj = await knex
+    await knex
       .insert({ username, password: hash, first_name, last_name, email })
       .into("users");
-    return userObj;
+    const userObj = await knex.select().from("users").where({username});
+    return userObj[0];
   }
 }
 

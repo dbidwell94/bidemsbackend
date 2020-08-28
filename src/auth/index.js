@@ -1,7 +1,6 @@
 const express = require("express");
 const crypt = require("bcrypt");
 const tokenHandler = require("jsonwebtoken");
-const { json } = require("express");
 const router = express.Router();
 const authModel = require("../models/index");
 
@@ -13,12 +12,15 @@ router.post("/register", (req, res) => {
         "A username, email, first_name, last_name, and password are required",
     });
   } else {
-    const token = tokenHandler.sign({ username, email }, process.env.SECRET, {
-      expiresIn: "1 day",
-    });
-    res
-      .status(201)
-      .json({ userObj: { username, first_name, last_name, email, token } });
+    authModel
+      .addNewUser({ username, password, first_name, last_name, email })
+      .then((result) => {
+        console.log(result)
+        res.status(201).json(result)
+      })
+      .catch((error) => {
+        res.status(401).json({ message: error.message });
+      });
   }
 });
 
@@ -27,11 +29,14 @@ router.post("/login", (req, res) => {
   if (!username || !password) {
     res.status(401).json({ message: "Please include username and password" });
   } else {
-    const t = authModel.logUserIn({username, password}).then(result => {
-      res.status(200).json(result);
-    }).catch(err => {
-      res.status(404).json({message: err.message})
-    })
+    const t = authModel
+      .logUserIn({ username, password })
+      .then((result) => {
+        res.status(200).json(result);
+      })
+      .catch((err) => {
+        res.status(404).json({ message: err.message });
+      });
   }
 });
 

@@ -1,35 +1,45 @@
 const knex = require("../knex");
 const crypt = require("bcrypt");
 
-function addNewUser({ usename, password, email, first_name, last_name }) {
-  crypt
-    .hash(password, 10)
-    .then((hashedString) => {
-      const userObj = {
-        username,
-        password: hashedString,
-        email,
-        first_name,
-        last_name,
-      };
-      knex.insert(userObj).into("users");
-      return {
-        createdUser: { username, email, first_name, last_name },
-        message: "User Created",
-      };
-    })
-    .catch((error) => {
-      return { createdUser: null, message: error };
-    });
+async function addNewUser({
+  username,
+  password,
+  email,
+  first_name,
+  last_name,
+}) {
+  if (!username || !password || !email || !first_name || !last_name) {
+    throw new Error(
+      "username, password, email, first_name, and last_name is required!"
+    );
+  }
+  else {
+    const hash = crypt.hashSync(password, 10);
+    const userObj = await knex.insert({username, password: hash, first_name, last_name, email}).into("users");
+    return userObj
+  }
 }
 
 async function logUserIn({ username, password }) {
-  const user = await knex.select().from("users").where({ username });
-  if (user.length < 1) {
+  const userArr = await knex.select().from("users").where({ username });
+  if (userArr.length < 1) {
     throw new Error("No user with that username exists");
-  }
-  else {
-    return "hello"
+  } else {
+    user = userArr[0];
+    const toReturn = await crypt
+      .compare(password, user.password)
+      .then((isCorrect) => {
+        if(isCorrect) {
+          return user
+        }
+        else {
+          return {message: "Passwords do not match"}
+        }
+      })
+      .catch((err) => {
+        return err
+      });
+      return toReturn;
   }
 }
 

@@ -12,11 +12,12 @@ async function addNewUser({
     throw new Error(
       "username, password, email, first_name, and last_name is required!"
     );
-  }
-  else {
+  } else {
     const hash = crypt.hashSync(password, 10);
-    const userObj = await knex.insert({username, password: hash, first_name, last_name, email}).into("users");
-    return userObj
+    const userObj = await knex
+      .insert({ username, password: hash, first_name, last_name, email })
+      .into("users");
+    return userObj;
   }
 }
 
@@ -29,17 +30,16 @@ async function logUserIn({ username, password }) {
     const toReturn = await crypt
       .compare(password, user.password)
       .then((isCorrect) => {
-        if(isCorrect) {
-          return user
-        }
-        else {
-          return {message: "Passwords do not match"}
+        if (isCorrect) {
+          return user;
+        } else {
+          return { message: "Passwords do not match" };
         }
       })
       .catch((err) => {
-        return err
+        return err;
       });
-      return toReturn;
+    return toReturn;
   }
 }
 

@@ -15,8 +15,8 @@ router.post("/register", (req, res) => {
     authModel
       .addNewUser({ username, password, first_name, last_name, email })
       .then((result) => {
-        console.log(result)
-        res.status(201).json(result)
+        console.log(result);
+        res.status(201).json(result);
       })
       .catch((error) => {
         res.status(401).json({ message: error.message });
@@ -32,7 +32,11 @@ router.post("/login", (req, res) => {
     const t = authModel
       .logUserIn({ username, password })
       .then((result) => {
-        res.status(200).json(result);
+        const { password, created_at, updated_at, ...toReturn } = result;
+        const token = tokenHandler.sign(toReturn, process.env.SECRET, {
+          expiresIn: "1 day",
+        });
+        res.status(200).json({ user: toReturn, token });
       })
       .catch((err) => {
         res.status(404).json({ message: err.message });

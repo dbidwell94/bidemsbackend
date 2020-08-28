@@ -2,7 +2,7 @@ exports.up = function (knex) {
   return knex.schema
     .createTable("users", (table) => {
       table.increments();
-      table.string("username").notNullable().unique()
+      table.string("username").notNullable().unique();
       table.string("first_name").notNullable();
       table.string("last_name").notNullable();
       table.string("email").nullable();
@@ -62,11 +62,17 @@ exports.up = function (knex) {
         .inTable("projects")
         .onUpdate("CASCADE")
         .onDelete("SET NULL");
+    })
+    .createTable("projects_to_users", (table) => {
+      table.increments();
+      table.integer("project_id").references("id").inTable("projects");
+      table.integer("user_id").references("id").inTable("users");
     });
 };
 
 exports.down = function (knex) {
   return knex.schema
+    .dropTableIfExists("projects_to_users")
     .dropTableIfExists("issues")
     .dropTableIfExists("punches")
     .dropTableIfExists("projects")

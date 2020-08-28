@@ -26,6 +26,7 @@
     "express-jwt": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.5",
+    "morgan": "^1.10.0",
     "pg": "^8.3.3"
   },
   "devDependencies": {

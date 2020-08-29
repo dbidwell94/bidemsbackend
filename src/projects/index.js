@@ -42,6 +42,12 @@ router.get("/permissions", (req, res) => {
   });
 });
 
+/**
+ * ------------------------------------
+ * ALL POST REQUESTS
+ * ------------------------------------
+ */
+
 router.post("/", (req, res) => {
   const { name, description, image_url } = req.body;
   const { id: created_user_id } = req.user;

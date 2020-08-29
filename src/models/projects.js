@@ -18,9 +18,29 @@ async function getAllProjects() {
     .select(projectWithUsernameSelector)
     .from("projects")
     .innerJoin("users", "projects.created_user_id", "=", "users.id");
+
+  const projectsToUsers = await knex
+    .select([
+      "projects_to_users.access_level",
+      "projects_to_users.project_id",
+      "users.username",
+    ])
+    .from("projects_to_users")
+    .innerJoin("users", "projects_to_users.user_id", "=", "users.id");
+
   if (projects.length < 1) {
     throw new Error("No projects yet");
   } else {
+    const toReturn = projects.map((proj) => {
+      proj.assigned_users = [];
+      projectsToUsers.forEach((ptu) => {
+        if (ptu.project_id === proj.id) {
+          const { project_id, ...toSend } = ptu;
+          proj.assigned_users.push(toSend);
+        }
+      });
+      return proj;
+    });
     return projects;
   }
 }
@@ -75,6 +95,12 @@ async function addUserToProject({ projectId, creatorId, idToAdd, permission }) {
     .where({ id: idToAdd })
     .first();
 
+  const projToUser = await knex
+    .select("*")
+    .from("projects_to_users")
+    .where({ user_id: idToAdd, project_id: projectId })
+    .first();
+
   if (!project) {
     throw new Error("That project was not found");
   } else if (!user) {
@@ -82,6 +108,8 @@ async function addUserToProject({ projectId, creatorId, idToAdd, permission }) {
   } else {
     if (project.created_user_id !== creatorId) {
       throw new Error("Only the project creator can add new users");
+    } else if (projToUser) {
+      throw new Error("User has already been assigned to this project");
     } else {
       await knex
         .insert({
@@ -90,6 +118,7 @@ async function addUserToProject({ projectId, creatorId, idToAdd, permission }) {
           user_id: idToAdd,
         })
         .into("projects_to_users");
+      return "User added successfullt";
     }
   }
 }

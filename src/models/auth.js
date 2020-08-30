@@ -17,7 +17,7 @@ async function addNewUser({
     await knex
       .insert({ username, password: hash, first_name, last_name, email })
       .into("users");
-    const userObj = await knex.select().from("users").where({username});
+    const userObj = await knex.select().from("users").where({ username });
     return userObj[0];
   }
 }
@@ -34,7 +34,7 @@ async function logUserIn({ username, password }) {
         if (isCorrect) {
           return user;
         } else {
-          return { message: "Passwords do not match" };
+          return null;
         }
       })
       .catch((err) => {

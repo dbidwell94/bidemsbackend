@@ -56,6 +56,12 @@ async function getProjectById(id) {
   if (!project) {
     throw new Error("That project does not exist");
   } else {
+    const ptu = await knex
+      .select("projects_to_users.access_level", "users.username")
+      .from("projects_to_users")
+      .where({ "projects_to_users.project_id": id })
+      .innerJoin("users", "projects_to_users.user_id", "=", "users.id");
+    project.assigned_users = ptu;
     return project;
   }
 }

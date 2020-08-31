@@ -4,12 +4,14 @@ const tokenauth = require("jsonwebtoken");
 const authApi = require("./auth");
 const projectsApi = require("./projects");
 const morgan = require("morgan");
+const cors = require("cors");
 const { token } = require("morgan");
 const app = express();
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 
 app.use(morgan("dev"));
+app.use(cors());
 
 // JWT Credentials
 app.use(
